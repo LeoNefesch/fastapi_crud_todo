@@ -58,5 +58,6 @@ async def delete_todo(id: int, service: TodoServiceDep):
     if not success:
         raise HTTPException(status_code=404, detail="Todo not found")
     cache_key = f"todos:{id}"
-    await redis_caching.delete(cache_key)
+    if redis_caching and redis_caching.enabled:
+        await redis_caching.delete(cache_key)
     return {"message": "Todo deleted successfully"}

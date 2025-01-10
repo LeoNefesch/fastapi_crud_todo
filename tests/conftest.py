@@ -11,6 +11,7 @@ from middleware.logger_middleware import LoggingRedisMiddleware, LoggingFileMidd
 from models.models import Base, TodoItem
 from storages.db_connection import get_db
 from storages.db_queries import SQLiteTodoService
+from storages.redis import redis_caching
 from utils.dependencies import get_todo_service
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./db/test.db"
@@ -21,6 +22,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture
 def mock_redis_client():
     """Фикстура для мокирования Redis клиента."""
+    redis_caching.enabled = False
     return mock.AsyncMock()
 
 
@@ -32,12 +34,14 @@ def disable_redis_cache(monkeypatch, mock_redis_client):
 
 @pytest.fixture(autouse=True)
 def mock_logging_middleware():
+    """Фикстура для отключения логирования."""
     LoggingRedisMiddleware.log = mock.AsyncMock()
     LoggingFileMiddleware.log = mock.AsyncMock()
 
 
 @pytest.fixture(scope="session")
 def test_db():
+    """Фикстура для создания тестовой БД на время выполнения всех тестов."""
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     yield db
@@ -47,6 +51,7 @@ def test_db():
 
 @pytest.fixture(scope="function")
 def client(test_db):
+    """Фикстура для переопределения зависимостей."""
     def override_get_db():
         try:
             yield test_db

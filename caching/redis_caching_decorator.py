@@ -25,14 +25,14 @@ def cache_result(ttl: int = 60, namespace: str = "todos", key_postfix: str = "")
                 resource_id = kwargs.get('id')
                 cache_key = f"{namespace}:{resource_id}"
 
-            if redis_caching:
+            if redis_caching and redis_caching.enabled:
                 cached_value = await redis_caching.get(cache_key)
                 if cached_value:
                     return json.loads(cached_value)
 
             result = await func(*args, **kwargs)
 
-            if redis_caching:
+            if redis_caching and redis_caching.enabled:
                 if isinstance(result, list):
                     type_adapter = TypeAdapter(list[TodoResponse])
                 else:
