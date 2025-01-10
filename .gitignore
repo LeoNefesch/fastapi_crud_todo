@@ -151,5 +151,5 @@ dmypy.json
 .history/
 
 .mypy_cache
-/todo.db
-/test.db
+db/todo.db
+db/test.db

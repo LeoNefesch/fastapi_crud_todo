@@ -7,10 +7,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from main import app
+from middleware.logger_middleware import LoggingRedisMiddleware, LoggingFileMiddleware
 from models.models import Base, TodoItem
-from routers.todo_items import get_todo_service
 from storages.db_connection import get_db
 from storages.db_queries import SQLiteTodoService
+from utils.dependencies import get_todo_service
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./db/test.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -27,6 +28,12 @@ def mock_redis_client():
 def disable_redis_cache(monkeypatch, mock_redis_client):
     """Фикстура для отключения кэширования путем замены redis_client."""
     monkeypatch.setattr("storages.redis.RedisService", mock_redis_client)
+
+
+@pytest.fixture(autouse=True)
+def mock_logging_middleware():
+    LoggingRedisMiddleware.log = mock.AsyncMock()
+    LoggingFileMiddleware.log = mock.AsyncMock()
 
 
 @pytest.fixture(scope="session")
